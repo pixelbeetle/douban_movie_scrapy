@@ -41,4 +41,6 @@ class MovieItem(scrapy.Item):
     image_urls = scrapy.Field()
     images = scrapy.Field()
 
+    class Meta(object):
+        db_collection_name = 'movie'
 

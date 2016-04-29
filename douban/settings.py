@@ -17,7 +17,7 @@ NEWSPIDER_MODULE = 'douban.spiders'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # if set this, RotateUserAgentMiddleware won't work
-USER_AGENT = ''
+USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_3) AppleWebKit/535.20 (KHTML, like Gecko) Chrome/19.0.1036.7 Safari/535.20"
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS=32
@@ -69,7 +69,7 @@ DOWNLOADER_MIDDLEWARES = {
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'scrapy.pipelines.images.ImagesPipeline': 1,
-    # 'douban.pipelines.SomePipeline': 300,
+    'douban.pipelines.mongo_pipeline.MongoPipeline': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -116,3 +116,6 @@ USER_AGENTS_POOL = [
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_3) AppleWebKit/535.20 (KHTML, like Gecko) Chrome/19.0.1036.7 Safari/535.20",
     "Opera/9.80 (Macintosh; Intel Mac OS X 10.6.8; U; fr) Presto/2.9.168 Version/11.52",
 ]
+
+# Settings for mongodb
+MONGO_DATABASE = 'douban'

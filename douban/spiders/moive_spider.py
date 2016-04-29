@@ -8,7 +8,7 @@ from scrapy.loader.processors import Join
 from scrapy.loader.processors import MapCompose
 from scrapy.http import Request
 
-from douban.items import MovieItem
+from douban.items.movie_item import MovieItem
 
 
 class MovieSpider(CrawlSpider):
