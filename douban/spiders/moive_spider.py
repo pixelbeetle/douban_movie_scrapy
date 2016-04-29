@@ -6,6 +6,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import Join
 from scrapy.loader.processors import MapCompose
+from scrapy.http import Request
 
 from douban.items import MovieItem
 
@@ -18,6 +19,12 @@ class MovieTop250Spider(CrawlSpider):
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/top250\?start=\d+.*', ))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+', )), callback="parse_movie"),
     ]
+
+    handle_httpstatus_list = [403, ]
+
+    def parse_start_url(self, response):
+        if response.status == 403:
+            yield Request(url=response.url)
 
     def parse_movie(self, response):
         self.logger.info('Parse item\'s url %s.', response.url)
@@ -81,4 +88,6 @@ class MovieTop250Spider(CrawlSpider):
             re=r'(\d+)'
         )
         l.add_value('last_update_time', str(datetime.utcnow()))
+        # download poster image file
+        l.add_xpath('image_urls', u'//img[@title="点击看更多海报" and @rel="v:image"]/@src')
         yield l.load_item()
