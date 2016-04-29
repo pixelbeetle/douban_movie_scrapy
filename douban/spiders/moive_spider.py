@@ -11,8 +11,8 @@ from scrapy.http import Request
 from douban.items import MovieItem
 
 
-class MovieTop250Spider(CrawlSpider):
-    name = "MovieTop250"
+class MovieSpider(CrawlSpider):
+    name = "movie"
     allowed_domains = ["movie.douban.com"]
     start_urls = ["https://movie.douban.com/top250"]
     rules = [
