@@ -21,7 +21,9 @@ class MovieTop250Spider(CrawlSpider):
     def parse_movie(self, response):
         self.logger.info('Parse item\'s url %s.', response.url)
         l = ItemLoader(item=MovieItem(), response=response)
+        l.add_value('id', response.url, re=r'/.*?/(\d+)/')
         l.add_xpath('name', '//span[@property="v:itemreviewed"]/text()')
+        l.add_xpath('poster', u'//img[@title="点击看更多海报" and @rel="v:image"]/@src')
         l.add_xpath(
             'alternate_name',
             u'//div[@id="info"]/span[@class="pl"][contains(./text(), "又名:")]/following::text()[1]',
@@ -34,10 +36,8 @@ class MovieTop250Spider(CrawlSpider):
         l.add_css('rating_betterthan_href', '//div[@class="rating_betterthan"]/a/@href')
         l.add_xpath('director', '//a[@rel="v:directedBy"]/text()')
         l.add_xpath('director_id', '//a[@rel="v:directedBy"]/@href', re=r'/.*?/(\d+)/')
-        l.add_xpath('director_href', '//a[@rel="v:directedBy"]/@href')
         l.add_xpath('script_editor', '(//div[@id="info"]//span[@class="attrs"]/a)[2]/text()')
         l.add_xpath('script_editor_id', '(//div[@id="info"]//span[@class="attrs"]/a)[2]/@href', re=r'/.*?/(\d+)/')
-        l.add_xpath('script_editor_href', '(//div[@id="info"]//span[@class="attrs"]/a)[2]/@href')
         l.add_xpath('genre', '//span[@property="v:genre"]/text()')
         l.add_xpath(
             'summary',
@@ -47,10 +47,7 @@ class MovieTop250Spider(CrawlSpider):
         l.add_xpath('runtime', '//span[@property="v:runtime"]/text()')
         l.add_xpath('starring', '//a[@rel="v:starring"]/text()')
         l.add_xpath('starring_id', '//a[@rel="v:starring"]/@href', re=r'/.*?/(\d+)/')
-        l.add_xpath('starring_href', '//a[@rel="v:starring"]/@href')
         l.add_xpath('initialReleaseDate', '//span[@property="v:initialReleaseDate"]/text()')
-        l.add_xpath('trailer_href', '//div[@id="related-pic"]//span[@class="pl"]/a[1]/@href')
-        l.add_xpath('all_photos_href', '//div[@id="related-pic"]//span[@class="pl"]/a[2]/@href')
         l.add_xpath(
             'region',
             u'//div[@id="info"]/span[@class="pl"][contains(./text(), "制片国家/地区:")]/following::text()[1]',
@@ -69,4 +66,6 @@ class MovieTop250Spider(CrawlSpider):
             'imdb_href',
             u'//div[@id="info"]/span[@class="pl"][contains(./text(), "IMDb链接:")]/following::a[1]/@href'
         )
+        l.add_xpath('recommendations_id', '//div[@class="recommendations-bd"]/dl/dd/a/@href', re=r'/.*?/(\d+)/')
+        l.add_xpath('recommendations', '//div[@class="recommendations-bd"]/dl/dd/a/text()')
         yield l.load_item()
