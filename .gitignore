@@ -38,3 +38,5 @@ dist
 items.json
 
 *.pyc
+
+*.json

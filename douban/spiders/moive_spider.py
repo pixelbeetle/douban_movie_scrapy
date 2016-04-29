@@ -6,6 +6,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import Join
 from scrapy.loader.processors import MapCompose
+from scrapy.http import Request
 
 from douban.items import MovieItem
 
@@ -81,4 +82,6 @@ class MovieTop250Spider(CrawlSpider):
             re=r'(\d+)'
         )
         l.add_value('last_update_time', str(datetime.utcnow()))
+        # download poster image file
+        l.add_xpath('image_urls', u'//img[@title="点击看更多海报" and @rel="v:image"]/@src')
         yield l.load_item()
