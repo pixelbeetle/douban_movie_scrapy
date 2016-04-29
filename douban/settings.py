@@ -55,7 +55,7 @@ DEFAULT_REQUEST_HEADERS = {
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-    'douban.middlewares.useragent_middleware.RotateUserAgentMiddleware': 500
+    'douban.middlewares.useragent_middleware.RotateUserAgentMiddleware': 500,
     # 'douban.middlewares.MyCustomDownloaderMiddleware': 543,
 }
 
