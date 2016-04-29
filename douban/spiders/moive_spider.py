@@ -1,4 +1,5 @@
 # coding=utf-8
+from datetime import datetime
 from scrapy.spiders import CrawlSpider
 from scrapy.spiders import Rule
 from scrapy.linkextractors import LinkExtractor
@@ -31,14 +32,15 @@ class MovieTop250Spider(CrawlSpider):
         )
         l.add_css('year', '.year::text', re=r'\((\d+)\)')
         l.add_css('rating', '.rating_num::text')
-        l.add_css('rating_per', '//span[@class="rating_per"]/text()')
-        l.add_css('rating_betterthan', '//div[@class="rating_betterthan"]/a/text()')
-        l.add_css('rating_betterthan_href', '//div[@class="rating_betterthan"]/a/@href')
+        l.add_xpath('rating_per', '//span[@class="rating_per"]/text()')
+        l.add_xpath('rating_betterthan', '//div[@class="rating_betterthan"]/a/text()')
+        l.add_xpath('rating_betterthan_href', '//div[@class="rating_betterthan"]/a/@href')
         l.add_xpath('director', '//a[@rel="v:directedBy"]/text()')
         l.add_xpath('director_id', '//a[@rel="v:directedBy"]/@href', re=r'/.*?/(\d+)/')
         l.add_xpath('script_editor', '(//div[@id="info"]//span[@class="attrs"]/a)[2]/text()')
         l.add_xpath('script_editor_id', '(//div[@id="info"]//span[@class="attrs"]/a)[2]/@href', re=r'/.*?/(\d+)/')
         l.add_xpath('genre', '//span[@property="v:genre"]/text()')
+        l.add_xpath('tags', '//div[@class="tags-body"]/a/text()')
         l.add_xpath(
             'summary',
             '//span[@property="v:summary"]/text()',
@@ -68,4 +70,15 @@ class MovieTop250Spider(CrawlSpider):
         )
         l.add_xpath('recommendations_id', '//div[@class="recommendations-bd"]/dl/dd/a/@href', re=r'/.*?/(\d+)/')
         l.add_xpath('recommendations', '//div[@class="recommendations-bd"]/dl/dd/a/text()')
+        l.add_value(
+            'collections_number',
+            '//div[@class="subject-others-interests-ft"]/a[1]/text()',
+            re=r'(\d+)'
+        )
+        l.add_value(
+            'wishes_number',
+            '//div[@class="subject-others-interests-ft"]/a[2]/text()',
+            re=r'(\d+)'
+        )
+        l.add_value('last_update_time', str(datetime.utcnow()))
         yield l.load_item()

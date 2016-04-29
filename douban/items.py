@@ -25,6 +25,7 @@ class MovieItem(scrapy.Item):
     starring = scrapy.Field()
     starring_id = scrapy.Field()
     genre = scrapy.Field()
+    tags = scrapy.Field()
     summary = scrapy.Field()
     runtime = scrapy.Field()
     initialReleaseDate = scrapy.Field()
@@ -34,5 +35,8 @@ class MovieItem(scrapy.Item):
     imdb_href = scrapy.Field()
     recommendations_id = scrapy.Field()
     recommendations = scrapy.Field()
+    collections_number = scrapy.Field()
+    wishes_number = scrapy.Field()
+    last_update_time = scrapy.Field()
 
 
