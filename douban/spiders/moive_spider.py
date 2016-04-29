@@ -20,6 +20,12 @@ class MovieTop250Spider(CrawlSpider):
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+', )), callback="parse_movie"),
     ]
 
+    handle_httpstatus_list = [403, ]
+
+    def parse_start_url(self, response):
+        if response.status == 403:
+            yield Request(url=response.url)
+
     def parse_movie(self, response):
         self.logger.info('Parse item\'s url %s.', response.url)
         l = ItemLoader(item=MovieItem(), response=response)
