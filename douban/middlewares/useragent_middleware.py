@@ -29,6 +29,11 @@ class RotateUserAgentMiddleware(UserAgentMiddleware):
     def __init__(self, user_agent=''):
         super(RotateUserAgentMiddleware, self).__init__(user_agent=user_agent)
 
+    @classmethod
+    def from_crawler(cls, crawler):
+        cls.user_agent_list = crawler.settings.get('USER_AGENTS_POOL', None) or cls.user_agent_list
+        super(RotateUserAgentMiddleware, cls).from_crawler(crawler=crawler)
+
     def process_request(self, request, spider):
         if self.user_agent:
             request.headers.setdefault('User-Agent', self.user_agent)
