@@ -22,6 +22,7 @@ class MovieSpider(CrawlSpider):
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+', )), callback="parse_movie"),
     ]
     lock = threading.Lock()
+    parse_search_semaphore = threading.Semaphore(5)
 
     handle_httpstatus_list = [403, ]
 
@@ -36,14 +37,8 @@ class MovieSpider(CrawlSpider):
         yield Request(url='https://movie.douban.com/j/search_tags?type=movie', callback=self.parse_search_tags)
 
     def parse_search_tags(self, response):
-
-        """
-        if response.status == 403:
-            yield Request(url=response.url)
-        """
         tags = json.loads(response.body)['tags']
-        try:
-            self.lock.acquire()
+        with self.lock:
             for tag in tags:
                 tag = tag.strip()
                 self.tag_urls_pool.update({
@@ -53,25 +48,14 @@ class MovieSpider(CrawlSpider):
                         'all_done': False
                     }
                 })
-        except Exception as e:
-            self.logger.exception(e)
-            raise
-        finally:
-            self.lock.release()
         for tag in tags:
             while True:
                 if self.tag_urls_pool[tag]['all_done']:
                     break
-                try:
-                    self.lock.acquire()
+                with self.lock:
                     page_start = self.tag_urls_pool[tag]['page_start']
                     page_limit = self.tag_urls_pool[tag]['page_limit']
                     self.tag_urls_pool[tag]['page_start'] = page_start + page_limit
-                except Exception as e:
-                    self.logger.exception(e)
-                    raise
-                finally:
-                    self.lock.release()
                 yield Request(
                     url='https://movie.douban.com/j/search_subjects?type=movie&tag='+tag+'&sort=recommend&page_limit=' +
                         str(page_limit)+'&page_start='+str(page_start)+'',
@@ -85,14 +69,8 @@ class MovieSpider(CrawlSpider):
             tag = response.meta['tag']
             if self.tag_urls_pool[tag]['all_done']:
                 return
-            try:
-                self.lock.acquire()
+            with self.lock:
                 self.tag_urls_pool[tag]['all_done'] = True
-            except Exception as e:
-                self.logger.exception(e)
-                raise
-            finally:
-                self.lock.release()
             return
         for item in json_data:
             yield Request(

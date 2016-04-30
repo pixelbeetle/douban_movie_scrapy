@@ -32,15 +32,9 @@ class MongoPipeline(object):
         logger.info('Mongodb disconnected.')
 
     def process_item(self, item, spider):
-        try:
-            self.lock.acquire()
+        with self.lock:
             if isinstance(item, MovieItem):
                 self.db[item.Meta.db_collection_name].insert(dict(item))
-        except Exception as e:
-            logger.exception(e)
-            raise
-        finally:
-            self.lock.release()
         return item
 
 
