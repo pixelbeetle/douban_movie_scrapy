@@ -18,8 +18,8 @@ class MovieSpider(CrawlSpider):
     allowed_domains = ["movie.douban.com"]
     start_urls = ["https://movie.douban.com/"]
     rules = [
-        Rule(LinkExtractor(allow=(r'https://movie.douban.com/top250\?start=\d+.*', ))),
-        Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+', )), callback="parse_movie"),
+        # Rule(LinkExtractor(allow=(r'https://movie.douban.com/top250\?start=\d+.*', ))),
+        # Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+', )), callback="parse_movie"),
     ]
     lock = threading.Lock()
 
