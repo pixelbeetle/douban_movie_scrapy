@@ -38,6 +38,7 @@ class MongoPipeline(object):
                 self.db[item.Meta.db_collection_name].insert(dict(item))
         except Exception as e:
             logger.exception(e)
+            raise
         finally:
             self.lock.release()
         return item

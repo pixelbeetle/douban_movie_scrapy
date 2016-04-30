@@ -1,4 +1,6 @@
 # coding=utf-8
+import json
+import threading
 from datetime import datetime
 from scrapy.spiders import CrawlSpider
 from scrapy.spiders import Rule
@@ -14,17 +16,89 @@ from douban.items.movie_item import MovieItem
 class MovieSpider(CrawlSpider):
     name = "movie"
     allowed_domains = ["movie.douban.com"]
-    start_urls = ["https://movie.douban.com/top250"]
+    start_urls = ["https://movie.douban.com/"]
     rules = [
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/top250\?start=\d+.*', ))),
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+', )), callback="parse_movie"),
     ]
+    lock = threading.Lock()
 
     handle_httpstatus_list = [403, ]
+
+    def __init__(self, *a, **kw):
+        self.tag_urls_pool = {}
+        self.page_limit = 20
+        super(MovieSpider, self).__init__(*a, **kw)
 
     def parse_start_url(self, response):
         if response.status == 403:
             yield Request(url=response.url)
+        yield Request(url='https://movie.douban.com/j/search_tags?type=movie', callback=self.parse_search_tags)
+
+    def parse_search_tags(self, response):
+
+        """
+        if response.status == 403:
+            yield Request(url=response.url)
+        """
+        tags = json.loads(response.body)['tags']
+        try:
+            self.lock.acquire()
+            for tag in tags:
+                tag = tag.strip()
+                self.tag_urls_pool.update({
+                    tag: {
+                        'page_start': 0,
+                        'page_limit': self.page_limit,
+                        'all_done': False
+                    }
+                })
+        except Exception as e:
+            self.logger.exception(e)
+            raise
+        finally:
+            self.lock.release()
+        for tag in tags:
+            while True:
+                if self.tag_urls_pool[tag]['all_done']:
+                    break
+                try:
+                    self.lock.acquire()
+                    page_start = self.tag_urls_pool[tag]['page_start']
+                    page_limit = self.tag_urls_pool[tag]['page_limit']
+                    self.tag_urls_pool[tag]['page_start'] = page_start + page_limit
+                except Exception as e:
+                    self.logger.exception(e)
+                    raise
+                finally:
+                    self.lock.release()
+                yield Request(
+                    url='https://movie.douban.com/j/search_subjects?type=movie&tag='+tag+'&sort=recommend&page_limit=' +
+                        str(page_limit)+'&page_start='+str(page_start)+'',
+                    meta={'tag': tag},
+                    callback=self.parse_movie_urls
+                )
+
+    def parse_movie_urls(self, response):
+        json_data = json.loads(response.body)['subjects']
+        if not len(json_data):
+            tag = response.meta['tag']
+            if self.tag_urls_pool[tag]['all_done']:
+                return
+            try:
+                self.lock.acquire()
+                self.tag_urls_pool[tag]['all_done'] = True
+            except Exception as e:
+                self.logger.exception(e)
+                raise
+            finally:
+                self.lock.release()
+            return
+        for item in json_data:
+            yield Request(
+                url=item['url'],
+                callback=self.parse_movie
+            )
 
     def parse_movie(self, response):
         self.logger.info('Parse item\'s url %s.', response.url)
