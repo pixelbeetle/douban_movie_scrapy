@@ -22,7 +22,6 @@ class MovieSpider(CrawlSpider):
         Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+', )), callback="parse_movie"),
     ]
     lock = threading.Lock()
-    parse_search_semaphore = threading.Semaphore(5)
 
     handle_httpstatus_list = [403, ]
 
