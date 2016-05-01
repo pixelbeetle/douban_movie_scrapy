@@ -11,6 +11,7 @@ from scrapy.loader.processors import MapCompose
 from scrapy.http import Request
 
 from douban.items.movie_item import MovieItem
+from douban.items.comment_item import CommentItem
 
 
 class MovieSpider(CrawlSpider):
@@ -19,7 +20,15 @@ class MovieSpider(CrawlSpider):
     start_urls = ["https://movie.douban.com/"]
     rules = [
         # Rule(LinkExtractor(allow=(r'https://movie.douban.com/top250\?start=\d+.*', ))),
-        # Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+', )), callback="parse_movie"),
+        # Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+', )), callback='parse_movie'),
+        # Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+/comments', )), callback='parse_comment'),
+        # Rule(
+        #     LinkExtractor(
+        #         allow=(r'\?start=\d+&limit=\d+&sort=new_score', ),
+        #         restrict_xpaths=(r'//a[@class="next"]', )
+        #     ),
+        #     callback='parse_comment'
+        # )
     ]
     lock = threading.Lock()
 
@@ -78,7 +87,7 @@ class MovieSpider(CrawlSpider):
             )
 
     def parse_movie(self, response):
-        self.logger.info('Parse item\'s url %s.', response.url)
+        self.logger.info('Parse movie\'s url %s.', response.url)
         l = ItemLoader(item=MovieItem(), response=response)
         l.add_value('id', response.url, re=r'/.*?/(\d+)/')
         l.add_xpath('name', '//span[@property="v:itemreviewed"]/text()')
@@ -141,4 +150,49 @@ class MovieSpider(CrawlSpider):
         l.add_value('last_update_time', str(datetime.utcnow()))
         # download poster image file
         l.add_xpath('image_urls', u'//img[@title="点击看更多海报" and @rel="v:image"]/@src')
+        yield l.load_item()
+        comments_url = response.xpath(r'//div[@id="comments-section"]/div[@class="mod-hd"]/h2//a/@href').extract_first()
+        yield Request(
+            url=comments_url,
+            callback=self.parse_comment
+        )
+
+    def parse_comment(self, response):
+        from scrapy.shell import inspect_response
+        inspect_response(response, self)
+
+        self.logger.info('Parse comment\'s url %s.', response.url)
+        l = ItemLoader(item=CommentItem(), response=response)
+        l.add_xpath('id', '//div[@class="comment-item"]/@data-cid')
+        l.add_xpath(
+            'title',
+            '//div[@class="comment-item"]//span[@class="comment-info"]/span[1]/@title',
+            MapCompose(unicode.strip)
+        )
+        l.add_xpath(
+            'comment',
+            '//div[@class="comment-item"]/div[@class="comment"]/p/text()',
+            MapCompose(unicode.strip)
+        )
+        l.add_xpath(
+            'user_id',
+            '//div[@class="comment-item"]//span[@class="comment-info"]/a/@href',
+            re=r'/.*?/(\d+)/'
+        )
+        l.add_xpath('name', '//div[@class="comment-item"]//span[@class="comment-info"]/a/text()')
+        l.add_xpath('avatar', '//div[@class="comment-item"]/div[@class="avatar"]//img/@src')
+        l.add_xpath(
+            'rating',
+            '//div[@class="comment-item"]//span[@class="comment-info"]/span[1]/@class',
+            re=r'allstar(\d)0'
+        )
+        l.add_xpath(
+            'date',
+            '//div[@class="comment-item"]//span[@class="comment-info"]/span[2]/text()',
+            MapCompose(unicode.strip)
+        )
+        l.add_xpath('comment_vote', '//div[@class="comment-item"]//span[@class="comment-vote"]/span/text()')
+        l.add_value('movie_id', response.url, re=r'/.*?/(\d+)/')
+        l.add_value('last_update_time', str(datetime.utcnow()))
+        l.add_xpath('image_urls', '//div[@class="comment-item"]/div[@class="avatar"]//img/@src')
         yield l.load_item()
