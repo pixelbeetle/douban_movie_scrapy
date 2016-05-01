@@ -9,6 +9,7 @@ from scrapy.loader import ItemLoader
 from scrapy.loader.processors import Join
 from scrapy.loader.processors import MapCompose
 from scrapy.http import Request
+from scrapy.exceptions import DropItem
 
 from douban.items.movie_item import MovieItem
 from douban.items.comment_item import CommentItem
@@ -18,18 +19,7 @@ class MovieSpider(CrawlSpider):
     name = "movie"
     allowed_domains = ["movie.douban.com"]
     start_urls = ["https://movie.douban.com/"]
-    rules = [
-        # Rule(LinkExtractor(allow=(r'https://movie.douban.com/top250\?start=\d+.*', ))),
-        # Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+', )), callback='parse_movie'),
-        # Rule(LinkExtractor(allow=(r'https://movie.douban.com/subject/\d+/comments', )), callback='parse_comment'),
-        # Rule(
-        #     LinkExtractor(
-        #         allow=(r'\?start=\d+&limit=\d+&sort=new_score', ),
-        #         restrict_xpaths=(r'//a[@class="next"]', )
-        #     ),
-        #     callback='parse_comment'
-        # )
-    ]
+    rules = []
     lock = threading.Lock()
 
     handle_httpstatus_list = [403, ]
@@ -45,6 +35,8 @@ class MovieSpider(CrawlSpider):
         yield Request(url='https://movie.douban.com/j/search_tags?type=movie', callback=self.parse_search_tags)
 
     def parse_search_tags(self, response):
+        if response.status == 403:
+            raise DropItem('Function parse_search_tags 403 page.')
         tags = json.loads(response.body)['tags']
         with self.lock:
             for tag in tags:
@@ -72,6 +64,8 @@ class MovieSpider(CrawlSpider):
                 )
 
     def parse_movie_urls(self, response):
+        if response.status == 403:
+            raise DropItem('Function parse_movie_urls 403 page.')
         json_data = json.loads(response.body)['subjects']
         if not len(json_data):
             tag = response.meta['tag']
@@ -88,6 +82,8 @@ class MovieSpider(CrawlSpider):
 
     def parse_movie(self, response):
         self.logger.info('Parse movie\'s url %s.', response.url)
+        if response.status == 403:
+            raise DropItem('Function parse_movie 403 page.')
         l = ItemLoader(item=MovieItem(), response=response)
         l.add_value('id', response.url, re=r'/.*?/(\d+)/')
         l.add_xpath('name', '//span[@property="v:itemreviewed"]/text()')
@@ -158,10 +154,9 @@ class MovieSpider(CrawlSpider):
         )
 
     def parse_comment(self, response):
-        from scrapy.shell import inspect_response
-        inspect_response(response, self)
-
         self.logger.info('Parse comment\'s url %s.', response.url)
+        if response.status == 403:
+            raise DropItem('Function parse_comment 403 page.')
         l = ItemLoader(item=CommentItem(), response=response)
         l.add_xpath('id', '//div[@class="comment-item"]/@data-cid')
         l.add_xpath(
