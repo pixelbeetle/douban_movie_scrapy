@@ -38,5 +38,9 @@ class MovieItem(scrapy.Item):
     collections_number = scrapy.Field()
     wishes_number = scrapy.Field()
     last_update_time = scrapy.Field()
+    image_urls = scrapy.Field()
+    images = scrapy.Field()
 
+    class Meta(object):
+        db_collection_name = 'movie'
 
