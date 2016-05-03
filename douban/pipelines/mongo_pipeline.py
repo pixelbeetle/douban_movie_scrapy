@@ -33,8 +33,8 @@ class MongoPipeline(object):
 
     def process_item(self, item, spider):
         with self.lock:
-            if isinstance(item, MovieItem):
-                self.db[item.Meta.db_collection_name].insert(dict(item))
+            self.db[item.Meta.db_collection_name]\
+                .find_one_and_update({'id': item['id']}, {'$set': dict(item)}, upsert=True)
         return item
 
 

@@ -55,7 +55,7 @@ DEFAULT_REQUEST_HEADERS = {
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-    'douban.middlewares.useragent_middleware.RotateUserAgentMiddleware': 500,
+    'douban.middlewares.useragent_middleware.RotateUserAgentMiddleware': 400,
     # 'douban.middlewares.MyCustomDownloaderMiddleware': 543,
 }
 
@@ -92,7 +92,7 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE='scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 # Settings for log
-LOG_FILE = 'scrapy.log'
+# LOG_FILE = 'scrapy.log'
 
 # Directory to store images
 IMAGES_STORE = 'images'
@@ -118,4 +118,5 @@ USER_AGENTS_POOL = [
 ]
 
 # Settings for mongodb
-MONGO_DATABASE = 'douban'
+MONGO_DATABASE = 'douban_raw'
+MONGO_URI = 'localhost:27017'
