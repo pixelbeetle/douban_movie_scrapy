@@ -92,7 +92,7 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE='scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 # Settings for log
-# LOG_FILE = 'scrapy.log'
+LOG_FILE = 'scrapy.log'
 
 # Directory to store images
 IMAGES_STORE = 'images'
